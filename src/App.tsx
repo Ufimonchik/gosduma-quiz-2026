@@ -1,28 +1,55 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuizStore } from './store/useQuizStore';
 import { QuizScreen } from './screens/QuizScreen';
 import { ResultScreen } from './screens/ResultScreen';
 import { LeaderboardScreen } from './screens/LeaderboardScreen';
 
+type Screen = 'quiz' | 'result' | 'leaderboard';
+
 export const App: React.FC = () => {
-  const { currentScreen, initQuiz } = useQuizStore();
+  const [screen, setScreen] = useState<Screen>('quiz');
+  const { isFinished, restartQuiz } = useQuizStore();
 
   useEffect(() => {
-    // Разворачиваем окно на максимум и включаем подтверждение выхода
     const tg = (window as unknown as { Telegram?: { WebApp?: { expand: () => void; enableClosingConfirmation: () => void; ready: () => void } } })?.Telegram?.WebApp;
     if (tg) {
       tg.ready();
       tg.expand();
       tg.enableClosingConfirmation();
     }
-    initQuiz();
-  }, [initQuiz]);
+  }, []);
+
+  useEffect(() => {
+    if (isFinished) {
+      setScreen('result');
+    }
+  }, [isFinished]);
+
+  const handleRestart = () => {
+    restartQuiz();
+    setScreen('quiz');
+  };
+
+  const handleShowLeaderboard = () => {
+    setScreen('leaderboard');
+  };
+
+  const handleBackToResult = () => {
+    setScreen('result');
+  };
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4">
-      {currentScreen === 'quiz' && <QuizScreen />}
-      {currentScreen === 'result' && <ResultScreen />}
-      {currentScreen === 'leaderboard' && <LeaderboardScreen />}
+      {screen === 'quiz' && <QuizScreen />}
+      {screen === 'result' && (
+        <ResultScreen
+          onRestart={handleRestart}
+          onShowLeaderboard={handleShowLeaderboard}
+        />
+      )}
+      {screen === 'leaderboard' && (
+        <LeaderboardScreen onBack={handleBackToResult} />
+      )}
     </main>
   );
 };
