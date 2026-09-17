@@ -1,49 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useQuizStore } from './store/useQuizStore';
 import { QuizScreen } from './screens/QuizScreen';
 import { ResultScreen } from './screens/ResultScreen';
 import { LeaderboardScreen } from './screens/LeaderboardScreen';
-import { useQuizStore } from './store/useQuizStore';
-import questionsData from './data/questions.json';
 
 export const App: React.FC = () => {
-  const { isCompleted, initQuiz } = useQuizStore();
-  const [screen, setScreen] = useState<'quiz' | 'result' | 'leaderboard'>('quiz');
+  const { currentScreen, initQuiz } = useQuizStore();
 
   useEffect(() => {
-    const tg = (window as unknown as { Telegram?: { WebApp?: { ready: () => void; expand: () => void } } })?.Telegram?.WebApp;
+    // Разворачиваем окно на максимум и включаем подтверждение выхода
+    const tg = (window as unknown as { Telegram?: { WebApp?: { expand: () => void; enableClosingConfirmation: () => void; ready: () => void } } })?.Telegram?.WebApp;
     if (tg) {
       tg.ready();
       tg.expand();
+      tg.enableClosingConfirmation();
     }
-
-    initQuiz(questionsData);
+    initQuiz();
   }, [initQuiz]);
 
-  useEffect(() => {
-    if (isCompleted) {
-      setScreen('result');
-    }
-  }, [isCompleted]);
-
-  const handleRestart = () => {
-    initQuiz(questionsData);
-    setScreen('quiz');
-  };
-
-  if (screen === 'leaderboard') {
-    return <LeaderboardScreen onBack={() => setScreen(isCompleted ? 'result' : 'quiz')} />;
-  }
-
-  if (screen === 'result') {
-    return (
-      <ResultScreen
-        onRestart={handleRestart}
-        onOpenLeaderboard={() => setScreen('leaderboard')}
-      />
-    );
-  }
-
-  return <QuizScreen />;
+  return (
+    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4">
+      {currentScreen === 'quiz' && <QuizScreen />}
+      {currentScreen === 'result' && <ResultScreen />}
+      {currentScreen === 'leaderboard' && <LeaderboardScreen />}
+    </main>
+  );
 };
 
 export default App;
