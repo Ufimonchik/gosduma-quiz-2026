@@ -3,12 +3,14 @@ import { useQuizStore } from './store/useQuizStore';
 import { QuizScreen } from './screens/QuizScreen';
 import { ResultScreen } from './screens/ResultScreen';
 import { LeaderboardScreen } from './screens/LeaderboardScreen';
+import questionsData from './data/questions.json';
+import type { QuestionItem } from './types/quiz';
 
 export const App: React.FC = () => {
   const store = useQuizStore() as any;
 
   useEffect(() => {
-    // Безопасное подключение Telegram WebApp без сбоев
+    // Безопасная интеграция Telegram WebApp
     const tg = (window as any)?.Telegram?.WebApp;
     if (tg) {
       tg.ready();
@@ -18,17 +20,19 @@ export const App: React.FC = () => {
       }
     }
 
-    // Запуск инициализации квиза, если метод существует
+    // Инициализируем квиз, передавая загруженные 15 вопросов
     if (typeof store.initQuiz === 'function') {
-      store.initQuiz();
-    } else if (typeof store.init === 'function') {
-      store.init();
+      store.initQuiz(questionsData as QuestionItem[]);
     }
   }, []);
 
-  // Если в сторе есть статус завершения/экрана — используем его
-  const isFinished = store.isFinished || store.isCompleted || store.status === 'finished';
-  const showLeaderboard = store.showLeaderboard || store.currentScreen === 'leaderboard';
+  const showLeaderboard = Boolean(store.showLeaderboard || store.currentScreen === 'leaderboard');
+  const isFinished = Boolean(
+    store.isFinished || 
+    store.isCompleted || 
+    store.status === 'finished' ||
+    (Array.isArray(store.questions) && store.questions.length > 0 && store.currentQuestionIndex >= store.questions.length)
+  );
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4">
@@ -42,9 +46,13 @@ export const App: React.FC = () => {
       ) : isFinished ? (
         <ResultScreen
           onRestart={() => {
-            if (typeof store.restartQuiz === 'function') store.restartQuiz();
-            else if (typeof store.resetQuiz === 'function') store.resetQuiz();
-            else window.location.reload();
+            if (typeof store.initQuiz === 'function') {
+              store.initQuiz(questionsData as QuestionItem[]);
+            } else if (typeof store.resetQuiz === 'function') {
+              store.resetQuiz();
+            } else {
+              window.location.reload();
+            }
           }}
           onOpenLeaderboard={() => {
             if (typeof store.setShowLeaderboard === 'function') store.setShowLeaderboard(true);
