@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useQuizStore } from '../store/useQuizStore';
 import { useQuizSounds } from '../hooks/useQuizSounds';
+import { supabase } from '../lib/supabase';
 
 interface ResultRank {
   title: string;
@@ -89,7 +90,33 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ onRestart, onOpenLea
       });
   }, [answersHistory, questions]);
 
- const handleShare = () => {
+ React.useEffect(() => {
+    const saveRecord = async () => {
+      try {
+        const tg = (window as any)?.Telegram?.WebApp;
+        const user = tg?.initDataUnsafe?.user;
+
+        if (user?.id && score > 0) {
+          await supabase.from('leaderboard').upsert(
+            {
+              user_id: user.id,
+              username: user.username || '',
+              first_name: user.first_name || 'Участник',
+              score: score,
+              accuracy: accuracyPercentage,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'user_id' }
+          );
+        }
+      } catch (e) {
+        console.error('Ошибка сохранения в таблицу лидеров:', e);
+      }
+    };
+
+    saveRecord();
+  }, [score, accuracyPercentage]);
+  const handleShare = () => {
     const botUrl = 'https://t.me/gosduma_2026_quiz_bot';
     
     // Безопасно формируем текст с очками, не ломая TypeScript
