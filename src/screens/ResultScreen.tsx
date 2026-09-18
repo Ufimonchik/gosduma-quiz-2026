@@ -90,15 +90,20 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ onRestart, onOpenLea
   }, [answersHistory, questions]);
 
   const handleShare = () => {
-    playClick();
-    const shareText = `🏛️ Я набрал ${score} очков в квизе «Выборы в Госдуму 2026» и получил звание «${rank.title}»! Сможешь превзойти мой результат? 🗳️`;
-    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(shareText)}`;
+    // Чистая ссылка на твоего бота (без хвостов tgWebAppData)
+    const botUrl = 'https://t.me/gosduma_2026_quiz_bot';
+    
+    // Текст сообщения
+    const shareText = `🏛️ Я набрал ${score} очков в квизе «Выборы в Госдуму 2026» и получил звание «${rankTitle}»!\nСможешь превзойти мой результат? 🗳️`;
 
-    const tg = (window as unknown as { Telegram?: { WebApp?: { openTelegramLink?: (url: string) => void } } })?.Telegram?.WebApp;
+    // Формируем нативную ссылку шаринга Telegram
+    const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(shareText)}`;
+
+    const tg = (window as any)?.Telegram?.WebApp;
     if (tg?.openTelegramLink) {
-      tg.openTelegramLink(shareUrl);
+      tg.openTelegramLink(tgShareUrl);
     } else {
-      window.open(shareUrl, '_blank');
+      window.open(tgShareUrl, '_blank');
     }
   };
 
