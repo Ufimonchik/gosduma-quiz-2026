@@ -89,14 +89,12 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ onRestart, onOpenLea
       });
   }, [answersHistory, questions]);
 
-  const handleShare = () => {
-    // Чистая ссылка на твоего бота (без хвостов tgWebAppData)
+ const handleShare = () => {
     const botUrl = 'https://t.me/gosduma_2026_quiz_bot';
     
-    // Текст сообщения
-    const shareText = `🏛️ Я набрал ${score} очков в квизе «Выборы в Госдуму 2026» и получил звание «${rankTitle}»!\nСможешь превзойти мой результат? 🗳️`;
+    // Безопасно формируем текст с очками, не ломая TypeScript
+    const shareText = `🏛️ Я набрал ${score} очков в квизе «Выборы в Госдуму 2026»!\nСможешь превзойти мой результат? 🗳️`;
 
-    // Формируем нативную ссылку шаринга Telegram
     const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(shareText)}`;
 
     const tg = (window as any)?.Telegram?.WebApp;
