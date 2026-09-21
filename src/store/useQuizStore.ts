@@ -40,6 +40,16 @@ const calculateMultiplier = (currentStreak: number): number => {
   return 1.0;
 };
 
+// Алгоритм Фишера-Йетса для непредсказуемой тасовки вариантов
+const shuffleArray = <T>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 
 export const useQuizStore = create<QuizState>((set, get) => ({
@@ -63,8 +73,14 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   initQuiz: (questionsList) => {
     if (timerInterval) clearInterval(timerInterval);
 
+    // Перемешиваем варианты ответов внутри каждого вопроса перед стартом
+    const randomizedQuestions = questionsList.map((q) => ({
+      ...q,
+      options: shuffleArray(q.options || []),
+    }));
+
     set({
-      questions: questionsList,
+      questions: randomizedQuestions,
       currentIndex: 0,
       isCompleted: false,
       score: 0,
