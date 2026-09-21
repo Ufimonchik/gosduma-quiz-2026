@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Trophy, Medal, Zap, User, Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Trophy, Medal, Zap, User, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface LeaderboardItem {
@@ -18,23 +18,13 @@ interface LeaderboardScreenProps {
 export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack }) => {
   const [leaders, setLeaders] = useState<LeaderboardItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [debugError, setDebugError] = useState<string | null>(null);
 
-  const supabaseUrlSet = Boolean(import.meta.env.VITE_SUPABASE_URL);
-  const supabaseKeySet = Boolean(import.meta.env.VITE_SUPABASE_ANON_KEY);
   const currentUserId = (window as any)?.Telegram?.WebApp?.initDataUnsafe?.user?.id;
 
   useEffect(() => {
     const fetchLeaders = async () => {
       try {
         setLoading(true);
-        setDebugError(null);
-
-        if (!supabaseUrlSet || !supabaseKeySet) {
-          setDebugError('Переменные VITE_SUPABASE_* не дошли до сборки на Vercel!');
-          setLoading(false);
-          return;
-        }
 
         const { data, error } = await supabase
           .from('leaderboard')
@@ -43,19 +33,19 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack }) 
           .limit(50);
 
         if (error) {
-          setDebugError(`Ошибка Supabase: ${error.message} (код: ${error.code})`);
+          console.error('Ошибка Supabase:', error.message);
         } else if (data) {
           setLeaders(data);
         }
       } catch (err: any) {
-        setDebugError(`Сетевой сбой: ${err?.message || err}`);
+        console.error('Сетевой сбой:', err?.message || err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchLeaders();
-  }, [supabaseUrlSet, supabaseKeySet]);
+  }, []);
 
   const getRankBadge = (index: number) => {
     if (index === 0) return <Medal className="w-5 h-5 text-amber-400 shrink-0" />;
@@ -79,14 +69,6 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack }) 
         </div>
         <div className="w-7" />
       </div>
-
-      {/* Диагностический блок */}
-      {debugError && (
-        <div className="mb-4 p-3.5 rounded-2xl bg-rose-950/60 border border-rose-800/80 text-rose-200 text-xs flex items-start gap-2.5">
-          <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-          <div className="leading-snug break-words">{debugError}</div>
-        </div>
-      )}
 
       <div className="flex flex-col gap-2.5 flex-1">
         {loading ? (
@@ -114,7 +96,7 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack }) 
                 className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
                   isMe
                     ? 'bg-cyan-950/40 border-cyan-500/50 shadow-lg shadow-cyan-950/50'
-                    : 'bg-slate-900/70 border-slate-800/80'
+                    : 'bg-slate-950/70 border-slate-800/80'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
