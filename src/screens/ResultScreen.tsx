@@ -94,7 +94,24 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ onRestart, onOpenLea
     const saveRecord = async () => {
       try {
         const tg = (window as any)?.Telegram?.WebApp;
-        const tgUser = tg?.initDataUnsafe?.user;
+        if (tg) {
+          tg.ready();
+        }
+
+        let tgUser = tg?.initDataUnsafe?.user;
+
+        // Принудительно парсим из initData, если initDataUnsafe не успел заполниться
+        if (!tgUser && tg?.initData) {
+          try {
+            const params = new URLSearchParams(tg.initData);
+            const userStr = params.get('user');
+            if (userStr) {
+              tgUser = JSON.parse(userStr);
+            }
+          } catch (err) {
+            console.error('Ошибка парсинга initData:', err);
+          }
+        }
 
         let localId = localStorage.getItem('quiz_user_id');
         if (!localId) {
@@ -103,7 +120,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ onRestart, onOpenLea
         }
 
         const userId = tgUser?.id ? Number(tgUser.id) : Number(localId);
-        const firstName = tgUser?.first_name || 'Участник';
+        const firstName = tgUser?.first_name || tgUser?.username || 'Участник';
         const username = tgUser?.username || '';
 
         if (score > 0) {
@@ -112,8 +129,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ onRestart, onOpenLea
               user_id: userId,
               username: username,
               first_name: firstName,
-              score: score,
-              accuracy: accuracyPercentage,
+              score: Number(score) || 0,
+              accuracy: Number(accuracyPercentage) || 0,
               updated_at: new Date().toISOString(),
             },
             { onConflict: 'user_id' }
